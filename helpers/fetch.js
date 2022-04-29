@@ -1,4 +1,4 @@
-const { default: axios } = require("axios");
+const axios = require("axios").default;
 const { Pokemons, Tipos } = require("../models");
 const baseUrl = process.env.POKEAPI;
 
@@ -9,7 +9,6 @@ const fetchPokemonApi = async (offset, limit) => {
       return data;
    } catch (error) {
       console.log(error.message)
-      throw new Error(error)
    }
 }
 
@@ -25,14 +24,14 @@ const fetchPokemonByName = async (name) => {
 
       return {
          id: data.id,
-         nombre: data.nombre,
-         altura: data.height,
-         peso: data.weight,
+         name: data.name,
+         height: data.height,
+         weight: data.weight,
          tipo,
-         vida: data.stats[0].base_stat,
-         ataque: data.stats[1].base_stat,
-         defensa: data.stats[2].base_stat,
-         velocidad: data.stats[5].base_stat,
+         hp: data.stats[0].base_stat,
+         attack: data.stats[1].base_stat,
+         defense: data.stats[2].base_stat,
+         speed: data.stats[5].base_stat,
          db: false
       };
    } catch (error) {
@@ -43,29 +42,29 @@ const fetchPokemonByName = async (name) => {
 const fetchPokemonByNameInDb = async(name) => {
    try {
       const pokemon = await Pokemons.findOne({
-         where: {nombre: name},
-         attributes: ['id', 'nombre', 'altura', 'peso', 'tipo', 'vida', 'ataque', 'defensa', 'velocidad', 'db'],
+         where: {name},
+         attributes: ['id', 'name', 'height', 'weight', 'hp', 'attack', 'defense', 'speed', 'db'],
          include: {model: Tipos}
       })
 
-      let tipo = []
+      let types = []
       for (let i = 0; i < pokemon.Tipos.length; i++) {
          
-         tipo.push(pokemon.Tipos[i].nombre)
+         types.push(pokemon.Tipos[i].nombre)
          
       }
 
       return {
          id: pokemon.id,
-         nombre: pokemon.nombre,
-         vida: pokemon.vida,
-         peso: pokemon.peso,
-         tipo,
-         ataque: pokemon.ataque,
-         defensa: pokemon.defensa,
-         velocidad: pokemon.velocidad,
+         name: pokemon.name,
+         hp: pokemon.hp,
+         weight: pokemon.weight,
+         types,
+         attack: pokemon.attack,
+         defense: pokemon.defense,
+         speed: pokemon.speed,
          db: pokemon.db,
-         altura: pokemon.altura
+         height: pokemon.height
       }
 
    } catch (error) {
@@ -78,7 +77,7 @@ const fetchAllPokemonsDb = async() => {
       const pokemons = await Pokemons.findAll({
          include: {model: Tipos, attributes: ['nombre']},
          attributes: [
-            'id', 'vida', 'nombre', 'peso', 'altura', 'ataque', 'velocidad', 'defensa', 'db'
+            'id', 'hp', 'name', 'weight', 'height', 'attack', 'speed', 'defense', 'db'
          ]
       })
 
@@ -86,6 +85,16 @@ const fetchAllPokemonsDb = async() => {
    } catch (error) {
       console.log(error)
    }
+}
+
+const fetchTypes = async() => {
+   const types = await Tipos.findAll();
+   const resp = await axios.get(types.url)
+   const allTypes = resp.data.types.map(async(t) => {
+      const resp = await axios.get(t.url)
+      
+   })
+   
 }
 
 module.exports = {

@@ -34,7 +34,7 @@ const Pokemons = sequelize.define('Pokemons', {
       type: DataTypes.INTEGER
    },
 
-   wegiht: {
+   weight: {
       type: DataTypes.INTEGER
    },
 

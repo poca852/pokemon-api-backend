@@ -10,15 +10,14 @@ const { Pokemons, Tipos } = require('../models');
 // const { Pokemons, Tipos } = require('../models');
 
 const obtenerPokemons = async (req = request, res = response) => {
-   const { offset = 0, limit = 12, name } = req.query;
+   const { offset = 0, limit = 40 } = req.query;
    try {
       const pokemonsApi = await fetchPokemonApi(offset, limit);
       const pokemonsDb = await fetchAllPokemonsDb();
-      
+      const allPokemons = pokemonsApi.concat(pokemonsDb)
       res.status(200).json({
          ok: true,
-         pokemonsApi,
-         pokemonsDb
+         allPokemons
       })
    } catch (error) {
       console.log(error)
@@ -117,8 +116,20 @@ const crearPokemon = async(req = request, res = response) => {
    }
 }
 
+const getTypes = async(req = request, res = response) => {
+   const types = await Tipos.findAll({
+      include: {model: Pokemons}
+   })
+
+   res.status(200).json({
+      ok: true,
+      types
+   })
+}
+
 module.exports = {
    obtenerPokemons,
    obtenerPokemonByName,
-   crearPokemon
+   crearPokemon,
+   getTypes
 }
