@@ -1,8 +1,10 @@
 const {Router} = require('express');
 // controllers
-const { obtenerPokemons, obtenerPokemonByName } = require('../controller/pokemon');
+const { obtenerPokemons, obtenerPokemonByName, crearPokemon } = require('../controller/pokemon');
 
 const router = Router();
+
+router.post('/pokemons', crearPokemon)
 
 router.get('/pokemons', obtenerPokemons);
 
