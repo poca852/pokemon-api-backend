@@ -1,59 +1,50 @@
 const { request, response } = require('express');
-// helpers
-const { fetchPokemonByName,
-   fetchGetTypes,
-   fetchAllPokes,
-   nameSearchApi, 
-   fetchId} = require('../helpers/fetch');
-const { Pokemon, Type } = require('../models');
+const { PokemonModel, TypeModel } = require('../models');
 
-const obtenerPokemons = async (req = request, res = response) => {
+// helpers
+const { getAllTypes,
+   getAllPokemons,
+   getPokemonByName,
+   getPokemonById } = require('../helpers/fetch');
+
+const getPokemons = async (req = request, res = response) => {
    const { name, limit = 0, offset = 12 } = req.query
    try {
       if (name) {
-         const pokemonApi = await nameSearchApi(name);
-         if (pokemonApi) {
-            res.status(200).json({
-               ok: true,
-               pokemonApi
-            })
-         }
-
-         const pokemonDb = await Pokemon.findOne({
-            where: { name },
-            include: Type
-         })
-         if (pokemonDb) {
-            res.status(200).json({
-               ok: true,
-               pokemonDb
-            })
-         }
-
-         if (!pokemonApi || !pokemonDb) {
-            res.status(404).json({
+         const pokemonByName = await getPokemonByName(name)
+         if(!pokemonByName){
+            return res.status(404).json({
                ok: false,
                msg: `No existe el pokemon ${name}`
             })
          }
+
+         return res.status(200).json({
+            ok: true,
+            pokemonByName
+         })
       } else {
-         const pokemons = await fetchAllPokes(limit, offset)
+         const allPokemons = await getAllPokemons(limit, offset)
          res.status(200).json({
             ok: true,
-            pokemons
+            allPokemons
          })
       }
    } catch (error) {
       console.log(error)
+      res.status(500).json({
+         ok: false,
+         msg: 'Hable con el administrador'
+      })
    }
 
 }
 
-const obtenerPokemonById = async(req = request, res = response) => {
-   const {id} = req.params;
+const getPokemonId = async (req = request, res = response) => {
+   const { id } = req.params;
    try {
-      const pokemon = await fetchId(id);
-      if(!pokemon){
+      const pokemon = await getPokemonById(id);
+      if (!pokemon) {
          res.status(404).json({
             ok: false,
             msg: `No existe el pokemon con el id ${id}`
@@ -66,47 +57,36 @@ const obtenerPokemonById = async(req = request, res = response) => {
       })
    } catch (error) {
       res.status(500).json({
-         msg: 'Hable con el administrador'
+         msg: 'Hable con el administrador id'
       })
    }
 }
 
-const crearPokemon = async (req = request, res = response) => {
+const newPokemon = async (req = request, res = response) => {
    const { types, ...body } = req.body;
    try {
       // verificamos que no exista en la pokeapi
-      const verificarPokeApi = await nameSearchApi(body.name);
-      if (verificarPokeApi) {
+      const existePokemon = await getPokemonByName(body.name);
+      if(existePokemon){
          return res.status(400).json({
             ok: false,
-            msg: `Ya existe el pokemon ${body.name}.`
-         })
-      }
-
-      // verifico si existe en la base de datso
-      const verficarPokeDb = await Pokemon.findOne({
-         where: { name: body.name }
-      })
-      if (verficarPokeDb) {
-         return res.status(400).json({
-            ok: false,
-            msg: `Ya existe el pokemon ${body.name}.`
+            msg: `Ya existe el pokemon ${body.name}`
          })
       }
 
       // si no existe el pokemons lo creamos
-      const newPokemon = await Pokemon.create(body)
+      const pokemonNew = await PokemonModel.create(body)
       switch (types.length) {
          case 2:
-            const tipo1 = await Type.findOne({ where: { name: types[0] } });
-            const tipo2 = await Type.findOne({ where: { name: types[1] } });
-            await newPokemon.addType(tipo1);
-            await newPokemon.addType(tipo2);
+            const tipo1 = await TypeModel.findOne({ where: { name: types[0] } });
+            const tipo2 = await TypeModel.findOne({ where: { name: types[1] } });
+            await pokemonNew.addType(tipo1);
+            await pokemonNew.addType(tipo2);
             break;
 
          case 1:
-            const tipo = await Type.findOne({ where: { name: types[0] } })
-            await newPokemon.addType(tipo)
+            const tipo = await TypeModel.findOne({ where: { name: types[0] } })
+            await pokemonNew.addType(tipo)
             break;
 
          default:
@@ -115,7 +95,7 @@ const crearPokemon = async (req = request, res = response) => {
 
       res.status(201).json({
          ok: true,
-         newPokemon
+         pokemonNew
       })
 
    } catch (error) {
@@ -125,8 +105,8 @@ const crearPokemon = async (req = request, res = response) => {
 
 const getTypes = async (req = request, res = response) => {
    try {
-      const pokeType = await fetchGetTypes()
-      res.status(200).json(pokeType)
+      const type = await getAllTypes()
+      res.status(200).json(type)
    } catch (error) {
       console.log(error)
       res.status(500).json({
@@ -136,8 +116,8 @@ const getTypes = async (req = request, res = response) => {
 }
 
 module.exports = {
-   obtenerPokemons,
-   obtenerPokemonById,
-   crearPokemon,
+   getPokemons,
+   getPokemonId,
+   newPokemon,
    getTypes
 }

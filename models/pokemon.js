@@ -1,7 +1,7 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../database/config');
 
-const Pokemon = sequelize.define('pokemon', {
+const PokemonModel = sequelize.define('pokemon', {
    id: {
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
@@ -68,4 +68,4 @@ const Pokemon = sequelize.define('pokemon', {
    }
 }, {timestamps: false});
 
-module.exports = Pokemon;
+module.exports = PokemonModel;

@@ -1,36 +1,22 @@
-const { Type, Pokemon } = require('../models');
+const { PokemonModel, TypeModel } = require('../models');
 const axios = require('axios').default;
 
-const fetchGetTypes = async () => {
+const getAllTypes = async () => {
    try {
-      const pokeTypes = [];
-      await axios.get('https://pokeapi.co/api/v2/type')
-         .then(apiTypes => {
-            apiTypes.data.results.map(pt => pokeTypes.push(pt.name))
-         })
-         .catch(e => console.log(e))
-
-      const types = pokeTypes.map(async (pt) => {
-         return await Type.findOrCreate({
-            where: {
-               name: pt
-            }
-         })
-      })
-      console.log(types)
-
-      const allPokeTypes = await Type.findAll();
-      return allPokeTypes
+      const types = await TypeModel.findAll();
+      return types;
    } catch (error) {
       console.log(error)
    }
 }
 
-const queryDetail = async(arr) => {
+// ====================================== GET ALL POKEMONS ==================================
+//                                              START
+
+const queryDetail = async(urlPokemons) => {
    const pokemons = []
-   for(let i = 0; i < arr.length; i++) {
-      let pokemonDetail = await axios.get(arr[i])
-      console.log(pokemonDetail)
+   for(let i = 0; i < urlPokemons.length; i++) {
+      let pokemonDetail = await axios.get(urlPokemons[i])
       pokemons.push({
          id: pokemonDetail.data.id,
          name: pokemonDetail.data.name,
@@ -45,47 +31,47 @@ const queryDetail = async(arr) => {
          db: false
       })
    }
-   console.log(pokemons)
    return pokemons
 }
 
-const fetchGetApi = async (offset, limit) => {
-
+const getPokemonsInApi = async (offset, limit) => {
    try {
       const pokemons = await axios.get('https://pokeapi.co/api/v2/pokemon?limit=40')
-      let pokeData = pokemons.data.results.map(pokemon => pokemon.url)
-      console.log('pokeData', pokeData)
-      pokeData = pokeData.splice(offset, limit)
-      return await queryDetail(pokeData)
+      let urlAllPokemons = pokemons.data.results.map(pokemon => pokemon.url)
+      return await queryDetail(urlAllPokemons)
    } catch (e) {
       console.log(e)
    }
 };
 
-const fetchGetDB = async () => {
-   return await Pokemon.findAll({
-      include: Type,
+const getPokemonsInDb = async() => {
+   return await PokemonModel.findAll({
+      include: {
+         model: TypeModel,
+         attributes: ['name'],
+         through: {
+            attributes: []
+         }
+      }
    });
 };
 
-const fetchAllPokes = async (limit, offset) => {
-   const api = await fetchGetApi(limit, offset);
-   const db = await fetchGetDB();
-   const pokes = await db.concat(api)
-   return pokes;
+const getAllPokemons = async(limit, offset) => {
+   const pokemonsInApi = await getPokemonsInApi(limit, offset);
+   const pokemonsInDb = await getPokemonsInDb();
+   const allPokemons = await pokemonsInDb.concat(pokemonsInApi);
+   return allPokemons;
 };
 
-const nameSearchApi = async (name) => {
-   try {
-      const resp = await axios.get(`https://pokeapi.co/api/v2/pokemon/${name}`)
-      const pokemon = await resp.data;
-      return pokemon
-   } catch (error) {
+//                                              END
+//============================================ GET ALL POKEMONS ===============================
 
-   }
-}
 
-const idFetchApi = async (id) => {
+
+//================================= GET POKEMON BY ID =========================== //
+//                                        START
+
+const getPokemonByIdInApi = async (id) => {
    try {
       const resp = await axios.get(`https://pokeapi.co/api/v2/pokemon/${id}`)
       const pokemon = await resp.data;
@@ -106,11 +92,11 @@ const idFetchApi = async (id) => {
    }
 }
 
-const idFetchDb = async(id) => {
+const getPokemonByIdInDb = async(id) => {
    try {
-      const pokemon = await Pokemon.findByPk(id, {
+      const pokemon = await PokemonModel.findByPk(id, {
          include: {
-            model: Type,
+            model: TypeModel,
             attributes: ["name"],
             through: {
                 attributes: []
@@ -123,19 +109,78 @@ const idFetchDb = async(id) => {
    }
 }
 
-const fetchId = async(id) => {
-   const db = await idFetchDb(id);
-   if(db  === undefined){
-      return await idFetchApi(id);
+const getPokemonById = async(id) => {
+   const db = await getPokemonByIdInDb(id);
+   if(db === undefined){
+      return await getPokemonByIdInApi(id);
    }
    return db
 }
 
+//                                       END
+//================================= GET POKEMON BY ID =========================== //
+
+// ====================== GET POKEMONS BY NAME========================================= //
+//                                START
+
+const getPokemonByNameInApi = async (name) => {
+   try {
+      const resp = await axios.get(`https://pokeapi.co/api/v2/pokemon/${name}`)
+      const pokemon = await resp.data;
+      return {
+         id: pokemon.id,
+         name: pokemon.name,
+         hp: pokemon.stats[0].base_stat,
+         attack: pokemon.stats[1].base_stat,
+         defense: pokemon.stats[2].base_stat,
+         speed: pokemon.stats[5].base_stat,
+         height: pokemon.height,
+         weight: pokemon.weight,
+         types: pokemon.types.map(pt => pt.type),
+         img: pokemon.sprites.other.home.front_default,
+      }
+   } catch  {
+      return undefined
+   }
+}
+
+const getPokemonByNameInDb = async(name) => {
+   try {
+      const pokemonInDb = await PokemonModel.findOne({
+         where: {name},
+         include: {
+            model: TypeModel,
+            attributes: ["name"],
+            through: {
+                attributes: []
+            }
+         }
+      })
+      return pokemonInDb
+   } catch {
+      return undefined
+   }
+}
+
+const getPokemonByName = async(name) => {
+   const pokemonByNameInApi = await getPokemonByNameInApi(name);
+   if(pokemonByNameInApi === undefined){
+      return await getPokemonByNameInDb(name);
+   }
+
+   return pokemonByNameInApi
+}
+
+//                               END
+// ====================== GET POKEMONS BY NAME========================================= //
+
+
+
 module.exports = {
-   fetchGetTypes,
-   fetchAllPokes,
-   nameSearchApi,
+   getAllTypes,
+   getAllPokemons,
+   getPokemonByName,
    // idFetchApi,
    // idFetchDb
-   fetchId
+   getPokemonById
 }

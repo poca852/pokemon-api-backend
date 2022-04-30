@@ -1,7 +1,7 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../database/config');
 
-const Type = sequelize.define('type', {
+const TypeModel = sequelize.define('type', {
    id: {
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
@@ -16,4 +16,4 @@ const Type = sequelize.define('type', {
    }
 }, {timestamps: false})
 
-module.exports = Type
+module.exports = TypeModel
