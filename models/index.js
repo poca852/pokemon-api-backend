@@ -1,10 +1,10 @@
-const Tipos = require('./tipo');
-const Pokemons = require('./pokemon');
+const Type = require('./tipo');
+const Pokemon = require('./pokemon');
 
-Pokemons.belongsToMany(Tipos, { through: 'Pokemon_Tipo' });
-Tipos.belongsToMany(Pokemons, { through: 'Pokemon_Tipo' });
+Pokemon.belongsToMany(Type, { through: 'pokemon_type' });
+Type.belongsToMany(Pokemon, { through: 'pokemon_type' });
 
 module.exports = {
-   Tipos,
-   Pokemons,
+   Type,
+   Pokemon,
 }

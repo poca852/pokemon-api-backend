@@ -7,7 +7,7 @@ class Server {
       this.app = express();
       this.port = process.env.PORT;
       this.paths = {
-         pokemons: '/api'
+         pokemons: '/api/pokemons'
       }
 
       // metodos

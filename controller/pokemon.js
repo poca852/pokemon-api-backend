@@ -1,74 +1,82 @@
-const axios = require('axios').default;
-
 const { request, response } = require('express');
 // helpers
-const {  fetchPokemonApi, 
-         fetchPokemonByName, 
-         fetchPokemonByNameInDb, 
-         fetchAllPokemonsDb} = require('../helpers/fetch');
-const { Pokemons, Tipos } = require('../models');
-// const { Pokemons, Tipos } = require('../models');
+const { fetchPokemonByName,
+   fetchGetTypes,
+   fetchAllPokes,
+   nameSearchApi, 
+   fetchId} = require('../helpers/fetch');
+const { Pokemon, Type } = require('../models');
 
 const obtenerPokemons = async (req = request, res = response) => {
-   const { offset = 0, limit = 40 } = req.query;
-   try {
-      const pokemonsApi = await fetchPokemonApi(offset, limit);
-      const pokemonsDb = await fetchAllPokemonsDb();
-      const allPokemons = pokemonsApi.concat(pokemonsDb)
-      res.status(200).json({
-         ok: true,
-         allPokemons
-      })
-   } catch (error) {
-      console.log(error)
-      res.status(500).json({
-         ok: false,
-         msg: 'Hable con el administrador'
-      })
-   }
-}
-
-const obtenerPokemonByName = async (req = request, res = response) => {
-   const { name } = req.query;
+   const { name, limit = 0, offset = 12 } = req.query
    try {
       if (name) {
-         const pokemonApi = await fetchPokemonByName(name);
+         const pokemonApi = await nameSearchApi(name);
          if (pokemonApi) {
-            return res.status(200).json({
+            res.status(200).json({
                ok: true,
                pokemonApi
             })
          }
 
-         const pokemonDb = await fetchPokemonByNameInDb(name);
+         const pokemonDb = await Pokemon.findOne({
+            where: { name },
+            include: Type
+         })
          if (pokemonDb) {
-            return res.status(200).json({
+            res.status(200).json({
                ok: true,
                pokemonDb
             })
          }
 
-         if(!pokemonApi || !pokemonDb){
-            return res.status(404).json({
+         if (!pokemonApi || !pokemonDb) {
+            res.status(404).json({
                ok: false,
-               msg: 'sin resultados'
+               msg: `No existe el pokemon ${name}`
             })
          }
+      } else {
+         const pokemons = await fetchAllPokes(limit, offset)
+         res.status(200).json({
+            ok: true,
+            pokemons
+         })
       }
    } catch (error) {
-      res.status(404).json({
-         ok: false,
-         msg: 'No se encontro ningun pokemon con su busqueda'
+      console.log(error)
+   }
+
+}
+
+const obtenerPokemonById = async(req = request, res = response) => {
+   const {id} = req.params;
+   try {
+      const pokemon = await fetchId(id);
+      if(!pokemon){
+         res.status(404).json({
+            ok: false,
+            msg: `No existe el pokemon con el id ${id}`
+         })
+      }
+
+      res.status(200).json({
+         ok: true,
+         pokemon
+      })
+   } catch (error) {
+      res.status(500).json({
+         msg: 'Hable con el administrador'
       })
    }
 }
 
-const crearPokemon = async(req = request, res = response) => {
-   const {types, ...body} = req.body;
+const crearPokemon = async (req = request, res = response) => {
+   const { types, ...body } = req.body;
    try {
       // verificamos que no exista en la pokeapi
-      const verificarPokeApi = await fetchPokemonByName(body.name);
-      if(verificarPokeApi){
+      const verificarPokeApi = await nameSearchApi(body.name);
+      if (verificarPokeApi) {
          return res.status(400).json({
             ok: false,
             msg: `Ya existe el pokemon ${body.name}.`
@@ -76,10 +84,10 @@ const crearPokemon = async(req = request, res = response) => {
       }
 
       // verifico si existe en la base de datso
-      const verficarPokeDb = await Pokemons.findOne({
-         where: {name: body.name}
+      const verficarPokeDb = await Pokemon.findOne({
+         where: { name: body.name }
       })
-      if(verficarPokeDb){
+      if (verficarPokeDb) {
          return res.status(400).json({
             ok: false,
             msg: `Ya existe el pokemon ${body.name}.`
@@ -87,19 +95,18 @@ const crearPokemon = async(req = request, res = response) => {
       }
 
       // si no existe el pokemons lo creamos
-      const newPokemon = await Pokemons.create(body)
+      const newPokemon = await Pokemon.create(body)
       switch (types.length) {
          case 2:
-            const tipo1 = await Tipos.findOne({where: {nombre: types[0]}});
-            const tipo2 = await Tipos.findOne({where: {nombre: types[1]}});
-            console.log(tipo2)
-            await newPokemon.addTipos(tipo1);
-            await newPokemon.addTipos(tipo2);
+            const tipo1 = await Type.findOne({ where: { name: types[0] } });
+            const tipo2 = await Type.findOne({ where: { name: types[1] } });
+            await newPokemon.addType(tipo1);
+            await newPokemon.addType(tipo2);
             break;
 
-         case 1: 
-            const tipo = await Tipos.findOne({where: {nombre: types[0]}})
-            await newPokemon.addTipos(tipo)
+         case 1:
+            const tipo = await Type.findOne({ where: { name: types[0] } })
+            await newPokemon.addType(tipo)
             break;
 
          default:
@@ -116,20 +123,21 @@ const crearPokemon = async(req = request, res = response) => {
    }
 }
 
-const getTypes = async(req = request, res = response) => {
-   const types = await Tipos.findAll({
-      include: {model: Pokemons}
-   })
-
-   res.status(200).json({
-      ok: true,
-      types
-   })
+const getTypes = async (req = request, res = response) => {
+   try {
+      const pokeType = await fetchGetTypes()
+      res.status(200).json(pokeType)
+   } catch (error) {
+      console.log(error)
+      res.status(500).json({
+         msg: 'Hable con el administrador'
+      })
+   }
 }
 
 module.exports = {
    obtenerPokemons,
-   obtenerPokemonByName,
+   obtenerPokemonById,
    crearPokemon,
    getTypes
 }

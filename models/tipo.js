@@ -1,22 +1,19 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../database/config');
 
-const Tipos = sequelize.define('Tipos', {
+const Type = sequelize.define('type', {
    id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      allowNull: false,
       primaryKey: true,
-      autoIncrement: true
    },
 
-   nombre: {
+   name: {
       type: DataTypes.STRING,
+      allowNull: false,
       unique: true,
-      allowNull: false
-   },
-
-   url: {
-      type: DataTypes.STRING
    }
-})
+}, {timestamps: false})
 
-module.exports = Tipos
+module.exports = Type
