@@ -195,7 +195,5 @@ module.exports = {
    getAllTypes,
    getAllPokemons,
    getPokemonByName,
-   // idFetchApi,
-   // idFetchDb
    getPokemonById
 }
