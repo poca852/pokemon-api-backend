@@ -57,7 +57,7 @@ const PokemonModel = sequelize.define('pokemon', {
    },
 
    img: {
-      type: DataTypes.STRING,
+      type: DataTypes.TEXT,
       defaultValue: 'https://www.academiadebomberos.org.ar/wp-content/uploads/2016/05/imagen-provisoria-a-falta-de-foto.jpg'
    },
 

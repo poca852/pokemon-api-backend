@@ -3,8 +3,23 @@ const axios = require('axios').default;
 
 const getAllTypes = async () => {
    try {
-      const types = await TypeModel.findAll();
-      return types;
+      const pokemonTypes = [];
+      axios.get('https://pokeapi.co/api/v2/type')
+         .then(types => {
+            types.data.results.map(pokeType => pokemonTypes.push(pokeType.name))
+         })
+         .catch(e => console.log(e))
+
+         pokemonTypes.map( async(pokeType) => {
+            return await TypeModel.findOrCreate({
+               where: {
+                  name: pokeType
+               }
+            }).catch(e => console.log(e))
+         })
+
+         const allTypes = await TypeModel.findAll();
+         return allTypes      
    } catch (error) {
       console.log(error)
    }
@@ -59,7 +74,7 @@ const getPokemonsInDb = async() => {
 const getAllPokemons = async(limit, offset) => {
    const pokemonsInApi = await getPokemonsInApi(limit, offset);
    const pokemonsInDb = await getPokemonsInDb();
-   const allPokemons = await pokemonsInDb.concat(pokemonsInApi);
+   const allPokemons = await pokemonsInApi.concat(pokemonsInDb);
    return allPokemons;
 };
 
