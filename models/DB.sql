@@ -1,23 +1,18 @@
 CREATE TABLE Pokemons(
    id UUID PRIMARY KEY NOT NULL,
-   nombre VARCHAR(255) UNIQUE NOT NULL,
-   vida INTEGER,
-   fuerza INTEGER,
-   defensa INTEGER,
-   velocidad INTEGER,
-   altura INTEGER,
-   peso INTEGER,
+   name VARCHAR(255) UNIQUE NOT NULL,
+   hp INTEGER,
+   attack INTEGER,
+   defense INTEGER,
+   speed INTEGER,
+   height INTEGER,
+   weight INTEGER,
    img VARCHAR(255),
-   createdAt TIMESTAMP,
-   updatedAt TIMESTAMP
-);
+   db BOOLEAN);
 
-CREATE TABLE tipos(
+CREATE TABLE types(
    id UUID PRIMARY KEY NOT NULL,
-   nombre VARCHAR(255) UNIQUE NOT NULL
-   createdAt TIMESTAMP,
-   updatedAt TIMESTAMP
-);
+   name VARCHAR(255) UNIQUE NOT NULL);
 
 
 

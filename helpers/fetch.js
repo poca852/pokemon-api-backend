@@ -4,7 +4,7 @@ const axios = require('axios').default;
 const getAllTypes = async () => {
    try {
       const pokemonTypes = [];
-      axios.get('https://pokeapi.co/api/v2/type')
+      await axios.get('https://pokeapi.co/api/v2/type')
          .then(types => {
             types.data.results.map(pokeType => pokemonTypes.push(pokeType.name))
          })

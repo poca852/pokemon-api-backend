@@ -106,7 +106,6 @@ const newPokemon = async (req = request, res = response) => {
 const getTypes = async (req = request, res = response) => {
    try {
       const type = await getAllTypes()
-      console.log(type)
       res.status(200).json(type)
    } catch (error) {
       console.log(error)
