@@ -20,7 +20,7 @@ const PokemonModel = sequelize.define('pokemon', {
       type: DataTypes.FLOAT(1),
       validate: {
          min: 1,
-         max: 100
+         max: 250
       }
    },
 
@@ -28,7 +28,7 @@ const PokemonModel = sequelize.define('pokemon', {
       type: DataTypes.FLOAT(1),
       validate: {
          min: 1,
-         max: 100
+         max: 250
       }
    },
 
@@ -36,7 +36,7 @@ const PokemonModel = sequelize.define('pokemon', {
       type: DataTypes.FLOAT(1),
       validate: {
          min: 1,
-         max: 100
+         max: 250
       }
    },
 
@@ -44,7 +44,7 @@ const PokemonModel = sequelize.define('pokemon', {
       type: DataTypes.FLOAT(1),
       validate: {
          min: 1,
-         max: 100
+         max: 250
       }
    },
 
